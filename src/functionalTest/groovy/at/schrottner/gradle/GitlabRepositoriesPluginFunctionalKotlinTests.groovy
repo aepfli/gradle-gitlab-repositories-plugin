@@ -42,7 +42,7 @@ class GitlabRepositoriesPluginFunctionalKotlinTests {
 		settingsGradle << """
             $apply    
 			configure<GitlabRepositoriesExtension> {
-				${generateToken("DeployToken", "DeployToken")}
+				${generateToken("deploy", "deploy")}
             }
         """
 		buildGradle << """
@@ -68,7 +68,7 @@ class GitlabRepositoriesPluginFunctionalKotlinTests {
 		buildGradle << """
             $apply    
 			configure<GitlabRepositoriesExtension> {
-				${generateToken("DeployToken", "DeployToken")}
+				${generateToken("deploy", "deploy")}
             }
         """
 
@@ -91,14 +91,14 @@ class GitlabRepositoriesPluginFunctionalKotlinTests {
 		settingsGradle << """ 
             $apply
 			configure<GitlabRepositoriesExtension> {
-				${generateToken("DeployToken", "DeployToken", "DeployToken")}
+				${generateToken("deploy", "deploy", "deploy")}
             }
         """
 
 		buildGradle << """
             $apply
             configure<GitlabRepositoriesExtension> {
-				${generateToken("PrivateToken", "PrivateToken")}
+				${generateToken("private", "private")}
             }
         """
 		//when:
@@ -150,7 +150,7 @@ class GitlabRepositoriesPluginFunctionalKotlinTests {
 		def output = ""
 		tokenTypes.eachWithIndex { it, index ->
 			output += """
-			token(${it}::class.javaObjectType, Action<Token>({
+			token("${it}", Action<Token>({
 				key = "token${index}"
 				value = "test"
 			}))

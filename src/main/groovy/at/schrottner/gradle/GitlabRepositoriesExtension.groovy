@@ -1,18 +1,15 @@
 package at.schrottner.gradle
 
-import at.schrottner.gradle.auths.JobToken
+import at.schrottner.gradle.auths.GitLabTokenType
 import at.schrottner.gradle.auths.Token
-import groovy.transform.CompileStatic
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.initialization.Settings
-import org.gradle.api.internal.artifacts.dsl.DefaultRepositoryHandler
 import org.gradle.api.model.ObjectFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
 
 /**
  * GitLabRepositoriesExtension is the main entry point to configure the plugin
@@ -54,10 +51,8 @@ class GitlabRepositoriesExtension {
 		if (project.extensions.extraProperties.has('gitLabTokens')) {
 			def passedOnTokens = (project.extensions.extraProperties['gitLabTokens'] ?: [:]) as Map<String, Object>
 			passedOnTokens.each { key, value ->
-				def token = (Class.forName(value.getClass().name) as Class<? extends Token>).newInstance()
-				token.key = key
-				token.value = value['value']
-				logger.info("$Config.LOG_PREFIX readding Token from Parent $token.name: $token.key")
+				def token = value
+				logger.info("$Config.LOG_PREFIX readding Token from Parent $token.type: $token.key")
 				tokens.put(token.key, token)
 			}
 			return true
@@ -67,17 +62,24 @@ class GitlabRepositoriesExtension {
 
 	void setup() {
 		logger.info("$Config.LOG_PREFIX initializing")
-		token(JobToken, {
+		token(GitLabTokenType.JOB, {
 			it.key = 'jobToken'
 			it.value = System.getenv("CI_JOB_TOKEN")
 		})
 	}
 
-	void token(Class<? extends Token> tokenClass, Action<Token> action) {
-		def token = tokenClass.newInstance();
+	void token(String tokenType, Action<Token> action) {
+		token(GitLabTokenType.valueOf(tokenType.toUpperCase()), action)
+	}
+
+	void token(GitLabTokenType tokenType, Action<Token> action) {
+		if (!tokenType) {
+			throw new IllegalArgumentException('no token')
+		}
+		def token = new Token(tokenType)
 		action.execute(token)
 
-		logger.info("$Config.LOG_PREFIX ${tokens.containsKey(token.key) ? "replaced" : "added"} $token.name: $token.key")
+		logger.info("$Config.LOG_PREFIX ${tokens.containsKey(token.key) ? "replaced" : "added"} $token.type: $token.key")
 		tokens.put(token.key, token)
 	}
 

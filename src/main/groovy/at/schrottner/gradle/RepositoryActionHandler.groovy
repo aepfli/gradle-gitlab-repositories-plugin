@@ -1,5 +1,6 @@
 package at.schrottner.gradle
 
+import at.schrottner.gradle.auths.GitLabTokenType
 import at.schrottner.gradle.auths.Token
 import org.gradle.api.Action
 import org.gradle.api.artifacts.repositories.AuthenticationContainer
@@ -28,6 +29,7 @@ class RepositoryActionHandler {
 
 		if (!token) {
 			handleInapplicableTokenCase(repositoryConfiguration, tokenList)
+			token = new Token(GitLabTokenType.NO_VALUE)
 		} else {
 			logger.info("${logPrefix(repositoryConfiguration)} is using '${token.key}' '${token.value}'")
 		}
@@ -72,7 +74,7 @@ class RepositoryActionHandler {
 				mvn.name = buildName(repositoryConfiguration)
 
 				mvn.credentials(HttpHeaderCredentials) {
-					it.name = token?.name
+					it.name = token?.type.headerName
 					it.value = token?.value
 				}
 				mvn.authentication(new Action<AuthenticationContainer>() {
